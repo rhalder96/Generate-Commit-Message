@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generate Commit Message</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .left-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: 100%;
+            max-width: 600px;
+        }
+        .row {
+            display: flex;
+            width: 100%;
+            max-width: 600px;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .col {
+            flex: 1;
+            margin-right: 10px;
+            max-width: 45%;
+        }
+        .col:last-child {
+            margin-right: 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        select, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        textarea {
+            width: 100%;
+            max-width: 600px;
+            height: 150px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            resize: none;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            align-self: center;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            width: 100%;
+            max-width: 600px;
+            text-align: left;
+        }
+        #result.valid {
+            background-color: lightgreen;
+        }
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            margin-left: -125px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 2px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            font-size: 17px;
+        }
+        .toast.show {
+            visibility: visible;
+            -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+        @-webkit-keyframes fadein {
+            from {bottom: 0; opacity: 0;} 
+            to {bottom: 30px; opacity: 1;}
+        }
+        @keyframes fadein {
+            from {bottom: 0; opacity: 0;}
+            to {bottom: 30px; opacity: 1;}
+        }
+        @-webkit-keyframes fadeout {
+            from {bottom: 30px; opacity: 1;} 
+            to {bottom: 0; opacity: 0;}
+        }
+        @keyframes fadeout {
+            from {bottom: 30px; opacity: 1;}
+            to {bottom: 0; opacity: 0;}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Generate Commit Message</h2>
+
+        <div class="row">
+            <div class="col">
+                <label for="dropdown2">Impact Area:</label>
+                <select id="dropdown2">
+                    <option value="SELECT">SELECT</option>
+                    <option value="GLOBAL">GLOBAL</option>
+                    <option value="CHECKOUT">CHECKOUT</option>
+                    <option value="PDP">PDP</option>
+                    <option value="HP">HP</option>
+                    <option value="PLP">PLP</option>
+                    <option value="CART">CART</                    <option value="MYACCOUNT">MYACCOUNT</option>
+                    <option value="MISC">MISC</option>
+                </select>
+            </div>
+            <div class="col">
+                <label for="ticketNumber">Ticket Number:</label>
+                <input type="text" id="ticketNumber" placeholder="Enter ticket number...">
+            </div>
+        </div>
+
+        <div class="left-container">
+            <textarea id="additionalMessage" placeholder="Enter your message..." rows="6"></textarea>
+
+            <button onclick="generateText()">Save to Clipboard</button>
+
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Commit message copied to clipboard</div>
+
+    <script>
+        function generateText() {
+            var impactArea = document.getElementById("dropdown2").value;
+            var ticketNumber = document.getElementById("ticketNumber").value;
+            var additionalMessage = document.getElementById("additionalMessage").value;
+
+            var resultText = ticketNumber + ": " + impactArea + " - " + additionalMessage;
+
+            var regex = /^(fix|feat|refactor|style|perf|test|docs|chore)\([A-Z][A-Z_\d]+\-\d+\)\: (GLOBAL|CHECKOUT|PDP|HP|PLP|CART|MYACCOUNT|MISC) - .*|^(STRY|RITM|DFCT|DMND|INC)\d+\: (GLOBAL|CHECKOUT|PDP|HP|PLP|CART|MYACCOUNT|MISC) - .*$/;
+
+            var errors = [];
+            if (!ticketNumber.match(/^(STRY|RITM|DFCT|DMND|INC)\d+$/)) {
+                errors.push("Ticket number format is incorrect. Should be like 'STRY1234'.");
+            }
+
+            if (impactArea === "SELECT") {
+                errors.push("Please select a valid impact area.");
+            }
+
+            if (additionalMessage.trim() === "") {
+                errors.push("Please enter a message.");
+            }
+
+            if (errors.length > 0) {
+                alert("Error: " + errors.join(" "));
+                var resultElement = document.getElementById("result");
+                resultElement.innerText = "";
+                resultElement.classList.remove("valid");
+            } else if (regex.test(resultText)) {
+                var resultElement = document.getElementById("result");
+                resultElement.innerText = resultText;
+                resultElement.classList.add("valid");
+
+                navigator.clipboard.writeText(resultText).then(() => {
+                    var toast = document.getElementById("toast");
+                    toast.className = "toast show";
+                    setTimeout(function() {
+                        toast.className = toast.className.replace(" show", "");
+                    }, 3000);
+                });
+            } else {
+                alert("Error: The commit message does not match the required format.");
+                var resultElement = document.getElementById("result");
+                resultElement.innerText = "";
+                resultElement.classList.remove("valid");
+            }
+        }
+    </script>
+</body>
+</html>
